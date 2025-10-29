@@ -1,0 +1,478 @@
+---
+title: "Data visualization"
+author: "Gemma Bargalló Solé"
+date: "2025-10-28"
+output:
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_float:
+      position: left
+    toc_depth: 5   
+  word_document: default
+  pdf_document: default
+---
+
+# 1. AREA CHART:
+
+Based on meteorological data from Barcelona for the year 2024, we create a dynamic area chart with the "date" variable on the X-axis and the "daily average temperature" variable on the Y-axis. data available on: https://opendata.aemet.es/centrodedescargas/productosAEMET
+
+```{r warning=FALSE, message=FALSE}
+# Library
+library(dygraphs)
+library(xts)          
+library(tidyverse)
+library(lubridate)
+library(readr)
+library(data.table)
+library(dplyr)
+library(stringr)
+
+# Data import
+#meteo_2024 <- read_csv("Màster en Data Science/3r semestre/Visualització de dades/PAC 2/meteo_2024.csv")
+meteo_2024 <- read.csv("meteo_2024.csv")
+
+# I have to convert the date column to a date-time format
+meteo_2024$fecha <- ymd(meteo_2024$fecha)
+
+# Then you can create the xts necessary to use dygraph
+don <- xts(x = meteo_2024$tmed, order.by = meteo_2024$fecha)
+# Finally the plot
+p <- dygraph(don) %>%
+  dySeries(
+    name = "V1", 
+    label = "Temperatura", 
+    color = "#D8AE5A"
+  ) %>%
+  dyOptions(
+    fillGraph = TRUE,
+    fillAlpha = 0.3,
+    drawGrid = FALSE,
+    labelsUTC = TRUE,
+    strokeWidth = 2
+  ) %>%
+  dyRangeSelector() %>%
+  dyCrosshair(direction = "vertical") %>%
+  dyHighlight(
+    highlightCircleSize = 6,
+    highlightSeriesBackgroundAlpha = 0.3,
+    hideOnMouseOut = FALSE
+  )
+
+p
+```
+
+
+
+
+# 2. Radar Chart
+
+Using a combined dataset with similar variables from 2023 and 2024, we took the numerical variables of daily average rainfall, daily average temperature, and wind direction. These variables were categorized to create individual radar charts for each.
+
+```{r warning=FALSE, message=FALSE}
+# Libraries
+library(tidyverse)
+library(fmsb)
+
+# Data import
+# meteo_23_24 <- read_csv("Màster en Data Science/3r semestre/Visualització de dades/PAC 2/meteo_23_24.csv")
+meteo_23_24 <- read.csv("meteo_23_24.csv")
+# I have to convert the date column to a date-time format
+meteo_23_24$fecha <- ymd(meteo_23_24$fecha)
+
+# Data preparation for both years
+meteo_23_24 <- meteo_23_24 %>%
+  mutate(
+    # Convert variables to numeric
+    tmed = as.numeric(tmed),
+    prec = as.numeric(prec),
+    dir = as.numeric(dir)
+  )
+
+# Calculate global max and min for temperature
+max_tmed <- max(meteo_23_24$tmed, na.rm = TRUE)
+min_tmed <- min(meteo_23_24$tmed, na.rm = TRUE)
+
+# Calculate frequency for temperature categories
+meteo_23_24 <- meteo_23_24 %>%
+  mutate(
+    tmed_cat = case_when(
+      tmed <= 13.80 ~ 0,  # Cold (1st Qu)
+      tmed <= 17.60 ~ 1,  # Cool (Median)
+      tmed <= 21.95 ~ 2,  # Mild/Warm (3rd Qu)
+      TRUE ~ 3          # Hot (Max)
+    ),
+    tmed_cat = factor(tmed_cat, levels = c(0, 1, 2, 3))
+  )
+
+# Frequency count for temperature categories (2023)
+tmed_freq_2023 <- meteo_23_24 %>%
+  filter(year(fecha) == 2023) %>%
+  count(tmed_cat) %>%
+  complete(tmed_cat = factor(c(0, 1, 2, 3), levels = c(0, 1, 2, 3)), fill = list(n = 0)) %>%
+  pull(n) %>%
+  t() %>%
+  as.data.frame()
+# Assign labels to columns for vlabels
+colnames(tmed_freq_2023) <- tmed_labels
+
+# Frequency count for temperature categories (2024)
+tmed_freq_2024 <- meteo_23_24 %>%
+  filter(year(fecha) == 2024) %>%
+  count(tmed_cat) %>%
+  complete(tmed_cat = factor(c(0, 1, 2, 3), levels = c(0, 1, 2, 3)), fill = list(n = 0)) %>%
+  pull(n) %>%
+  t() %>%
+  as.data.frame()
+# Assign labels to columns for vlabels
+colnames(tmed_freq_2024) <- tmed_labels
+
+# Prepare data for temperature radar charts
+tmed_final_2023 <- rbind(
+  rep(max(tmed_freq_2023), 4), # Maximum value for each axis
+  rep(0, 4), # Minimum value for each axis
+  tmed_freq_2023 # Data to be plotted (frequencies)
+)
+
+tmed_final_2024 <- rbind(
+  rep(max(tmed_freq_2024), 4), # Maximum value for each axis
+  rep(0, 4), # Minimum value for each axis
+  tmed_freq_2024 # Data to be plotted (frequencies)
+)
+
+# Frequency count for precipitation categories (2023)
+prec_freq_2023 <- meteo_23_24 %>%
+  filter(year(fecha) == 2023) %>%
+  mutate(
+    prec_cat = case_when(
+      prec == 0 ~ 0, # No rain
+      prec > 0 & prec <= 5 ~ 1, # Light rain
+      prec > 5 & prec <= 20 ~ 2, # Moderate rain
+      prec > 20 ~ 3 # Heavy rain
+    ),
+    prec_cat = factor(prec_cat, levels = c(0, 1, 2, 3))
+  ) %>%
+  count(prec_cat) %>%
+  complete(prec_cat = factor(c(0, 1, 2, 3), levels = c(0, 1, 2, 3)), fill = list(n = 0)) %>%
+  pull(n) %>%
+  t() %>%
+  as.data.frame()
+# Assign labels to columns for vlabels
+colnames(prec_freq_2023) <- prec_labels
+
+# Frequency count for precipitation categories (2024)
+prec_freq_2024 <- meteo_23_24 %>%
+  filter(year(fecha) == 2024) %>%
+  mutate(
+    prec_cat = case_when(
+      prec == 0 ~ 0, # No rain
+      prec > 0 & prec <= 5 ~ 1, # Light rain
+      prec > 5 & prec <= 20 ~ 2, # Moderate rain
+      prec > 20 ~ 3 # Heavy rain
+    ),
+    prec_cat = factor(prec_cat, levels = c(0, 1, 2, 3))
+  ) %>%
+  count(prec_cat) %>%
+  complete(prec_cat = factor(c(0, 1, 2, 3), levels = c(0, 1, 2, 3)), fill = list(n = 0)) %>%
+  pull(n) %>%
+  t() %>%
+  as.data.frame()
+# Assign labels to columns for vlabels
+colnames(prec_freq_2024) <- prec_labels
+
+# Prepare data for precipitation radar charts
+prec_final_2023 <- rbind(
+  rep(max(prec_freq_2023), 4), # Maximum value for each axis
+  rep(0, 4), # Minimum value for each axis
+  prec_freq_2023 # Data to be plotted (frequencies)
+)
+
+prec_final_2024 <- rbind(
+  rep(max(prec_freq_2024), 4), # Maximum value for each axis
+  rep(0, 4), # Minimum value for each axis
+  prec_freq_2024 # Data to be plotted (frequencies)
+)
+
+# Frequency count for wind direction categories (2023)
+dir_freq_2023 <- meteo_23_24 %>%
+  filter(year(fecha) == 2023) %>%
+  mutate(
+    dir_cat = case_when(
+      dir == 99 ~ "Calm/No Data", # Special code for calm or no data
+      dir >= 1 & dir <= 3 ~ "N",
+      dir > 3 & dir <= 8 ~ "NE",
+      dir > 8 & dir <= 13 ~ "E",
+      dir > 13 & dir <= 18 ~ "SE",
+      dir > 18 & dir <= 23 ~ "S",
+      dir > 23 & dir <= 28 ~ "SO",
+      dir > 28 & dir <= 33 ~ "O",
+      dir > 33 & dir <= 36 ~ "NO",
+      TRUE ~ "Other Code"
+    )
+  ) %>%
+  count(dir_cat) %>%
+  complete(dir_cat = factor(c("Calm/No Data", "N", "NE", "E", "SE", "S", "SO", "O", "NO"), 
+                           levels = c("Calm/No Data", "N", "NE", "E", "SE", "S", "SO", "O", "NO")), 
+           fill = list(n = 0)) %>%
+  pull(n) %>%
+  t() %>%
+  as.data.frame()
+# Assign labels to columns for vlabels
+colnames(dir_freq_2023) <- dir_labels
+
+# Frequency count for wind direction categories (2024)
+dir_freq_2024 <- meteo_23_24 %>%
+  filter(year(fecha) == 2024) %>%
+  mutate(
+    dir_cat = case_when(
+      dir == 99 ~ "Calm/No Data", # Special code for calm or no data
+      dir >= 1 & dir <= 3 ~ "N",
+      dir > 3 & dir <= 8 ~ "NE",
+      dir > 8 & dir <= 13 ~ "E",
+      dir > 13 & dir <= 18 ~ "SE",
+      dir > 18 & dir <= 23 ~ "S",
+      dir > 23 & dir <= 28 ~ "SO",
+      dir > 28 & dir <= 33 ~ "O",
+      dir > 33 & dir <= 36 ~ "NO",
+      TRUE ~ "Other Code"
+    )
+  ) %>%
+  count(dir_cat) %>%
+  complete(dir_cat = factor(c("Calm/No Data", "N", "NE", "E", "SE", "S", "SO", "O", "NO"), 
+                           levels = c("Calm/No Data", "N", "NE", "E", "SE", "S", "SO", "O", "NO")), 
+           fill = list(n = 0)) %>%
+  pull(n) %>%
+  t() %>%
+  as.data.frame()
+# Assign labels to columns for vlabels
+colnames(dir_freq_2024) <- dir_labels
+
+# Prepare data for wind direction radar charts
+dir_final_2023 <- rbind(
+  rep(max(dir_freq_2023), 9), # Maximum value for each axis
+  rep(0, 9), # Minimum value for each axis
+  dir_freq_2023 # Data to be plotted (frequencies)
+)
+
+dir_final_2024 <- rbind(
+  rep(max(dir_freq_2024), 9), # Maximum value for each axis
+  rep(0, 9), # Minimum value for each axis
+  dir_freq_2024 # Data to be plotted (frequencies)
+)
+
+# Set up the plotting area to have 3 rows and 2 columns
+par(mfrow = c(3, 2), mar = c(1, 1, 1, 1))
+
+# Common axis labels based on global maximum for temperature
+common_max_tmed <- max(max(tmed_freq_2023), max(tmed_freq_2024))
+
+# Define Category Labels 
+# Temperature Labels (4 Categories)
+tmed_labels <- c("Cold", "Cool", "Mild", "Hot")
+
+# Precipitation Labels (4 Categories)
+prec_labels <- c("No Rain", "Light", "Moderate", "Heavy ")
+
+# Wind Direction Labels (9 Categories - including 'Calm/No Data')
+dir_labels <- c("Calm/No Data", "N", "NE", "E", "SE", "S", "SO", "O", "NO")
+
+# Radar chart for temperature (2023)
+
+radarchart(
+  tmed_final_2023,
+  axistype = 1,
+  vlabels = tmed_labels, 
+  pcol = rgb(1, 0.65, 0, 0.9),  # Color of the polygon (orange)
+  pfcol = rgb(1, 0.65, 0, 0.5),  # Fill color of the polygon (orange)
+  plwd = 4,                       # Line width
+  cglcol = "grey",                # Color of the grid
+  cglty = 1,                      # Type of grid lines
+  axislabcol = "grey",            # Color of axis labels
+  caxislabels = seq(0, common_max_tmed, by = common_max_tmed / 4),  # Shared Axis Labels
+  cglwd = 0.8,                    # Width of grid lines
+  vlcex = 0.8                     # Size of variable labels
+)
+title(main = "Temperature (2023)")  # Title for temperature chart (2023)
+
+# Radar chart for temperature (2024)
+radarchart(
+  tmed_final_2024,
+  axistype = 1,
+  vlabels = tmed_labels, 
+  pcol = rgb(1, 0.65, 0, 0.9),  # Color of the polygon (orange)
+  pfcol = rgb(1, 0.65, 0, 0.5),  # Fill color of the polygon (orange)
+  plwd = 4,                       # Line width
+  cglcol = "grey",                # Color of the grid
+  cglty = 1,                      # Type of grid lines
+  axislabcol = "grey",            # Color of axis labels
+  caxislabels = seq(0, common_max_tmed, by = common_max_tmed / 4),  # Shared Axis Labels
+  cglwd = 0.8,                    # Width of grid lines
+  vlcex = 0.8                     # Size of variable labels
+)
+title(main = "Temperature (2024)")  # Title for temperature chart (2024)
+
+# Common axis labels based on global maximum for precipitation
+common_max_prec <- max(max(prec_freq_2023), max(prec_freq_2024))
+
+# Radar chart for precipitation (2023)
+radarchart(
+  prec_final_2023,
+  axistype = 1,
+  vlabels = prec_labels, 
+  pcol = rgb(0.2, 0.5, 0.5, 0.9),  # Color of the polygon (teal)
+  pfcol = rgb(0.2, 0.5, 0.5, 0.5),  # Fill color of the polygon (teal)
+  plwd = 4,                        # Line width
+  cglcol = "grey",                 # Color of the grid
+  cglty = 1,                       # Type of grid lines
+  axislabcol = "grey",             # Color of axis labels
+  caxislabels = seq(0, common_max_prec, by = common_max_prec / 4),  # Shared Axis Labels
+  cglwd = 0.8,                     # Width of grid lines
+  vlcex = 0.8                      # Size of variable labels
+)
+title(main = "Precipitation (2023)")  # Title for precipitation chart (2023)
+
+# Radar chart for precipitation (2024)
+radarchart(
+  prec_final_2024,
+  axistype = 1,
+  vlabels = prec_labels, 
+  pcol = rgb(0.2, 0.5, 0.5, 0.9),  # Color of the polygon (teal)
+  pfcol = rgb(0.2, 0.5, 0.5, 0.5),  # Fill color of the polygon (teal)
+  plwd = 4,                        # Line width
+  cglcol = "grey",                 # Color of the grid
+  cglty = 1,                       # Type of grid lines
+  axislabcol = "grey",             # Color of axis labels
+  caxislabels = seq(0, common_max_prec, by = common_max_prec / 4),  # Shared Axis Labels
+  cglwd = 0.8,                     # Width of grid lines
+  vlcex = 0.8                      # Size of variable labels
+)
+title(main = "Precipitation (2024)")  # Title for precipitation chart (2024)
+
+# Common axis labels based on global maximum for wind direction
+common_max_dir <- max(max(dir_freq_2023), max(dir_freq_2024))
+
+# Radar chart for wind direction (2023)
+radarchart(
+  dir_final_2023,
+  axistype = 1,
+  vlabels = dir_labels, 
+  pcol = rgb(0.1, 0.4, 0.9, 0.9),  # Color of the polygon (blue)
+  pfcol = rgb(0.1, 0.4, 0.9, 0.5),  # Fill color of the polygon (blue)
+  plwd = 4,                        # Line width
+  cglcol = "grey",                 # Color of the grid
+  cglty = 1,                       # Type of grid lines
+  axislabcol = "grey",             # Color of axis labels
+  caxislabels = seq(0, common_max_dir, by = common_max_dir / 4),  # Shared Axis Labels
+  cglwd = 0.8,                     # Width of grid lines
+  vlcex = 0.8                      # Size of variable labels
+)
+title(main = "Wind Direction (2023)")  # Title for wind direction chart (2023)
+
+# Radar chart for wind direction (2024)
+radarchart(
+  dir_final_2024,
+  axistype = 1,
+  vlabels = dir_labels, 
+  pcol = rgb(0.1, 0.4, 0.9, 0.9),  # Color of the polygon (blue)
+  pfcol = rgb(0.1, 0.4, 0.9, 0.5),  # Fill color of the polygon (blue)
+  plwd = 4,                        # Line width
+  cglcol = "grey",                 # Color of the grid
+  cglty = 1,                       # Type of grid lines
+  axislabcol = "grey",             # Color of axis labels
+  caxislabels = seq(0, common_max_dir, by = common_max_dir / 4),  # Shared Axis Labels
+  cglwd = 0.8,                     # Width of grid lines
+  vlcex = 0.8                      # Size of variable labels
+)
+title(main = "Wind Direction (2024)")  # Title for wind direction chart (2024)
+```
+
+# 3. Rose Chart
+
+Using the BCN traffic accident data for 2024, we aim to create a rose chart to visualize how accidents are distributed throughout the days of the week. Data available on: https://opendata-ajuntament.barcelona.cat/data/ca/dataset/accidents-gu-bcn
+
+```{r warning=FALSE, message=FALSE}
+# Libraries
+library(tidyverse) 
+library(stringr)   
+library(lubridate) 
+library(showtext)  
+
+# Data Import 
+accidents_bcn24 <- read_csv("2024_accidents_gu_bcn.csv")
+accidents_bcn24$Descripcio_dia_setmana <- as.factor(accidents_bcn24$Descripcio_dia_setmana)
+
+# Data Preparation: Calculate frequency per day of the week
+
+# Define the order of the days of the week for the polar axis (in English)
+day_order <- c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+
+# Assuming the 'Descripcio_dia_setmana' column contains the Catalan names, 
+# we need to map them to the English names for the plot labels.
+
+# Mapping Catalan to English 
+day_mapping <- c(
+  "Dilluns" = "Monday",
+  "Dimarts" = "Tuesday",
+  "Dimecres" = "Wednesday",
+  "Dijous" = "Thursday",
+  "Divendres" = "Friday",
+  "Dissabte" = "Saturday",
+  "Diumenge" = "Sunday"
+)
+
+# Calculate frequency and prepare the data
+freq_data <- accidents_bcn24 %>%
+  filter(!is.na(Descripcio_dia_setmana)) %>%
+  mutate(
+    # Map the raw Catalan names to the English names
+    Day_of_Week = recode(Descripcio_dia_setmana, !!!day_mapping),
+    # Convert to factor with the correct order for the plot
+    Day_of_Week = factor(Day_of_Week, levels = day_order)
+  ) %>%
+  count(Day_of_Week, name = "Accidents_Count") %>% # Count the frequency
+  drop_na(Day_of_Week)
+
+# Rose Chart Visualization
+# Recreate Rose Diagram with frequency data and the standard ggplot2 theme
+freq_data %>%
+  ggplot(aes(x = Day_of_Week, y = Accidents_Count, fill = Day_of_Week)) +
+
+  # The geom_col layer creates the bar chart
+  geom_col(color = "grey20", show.legend = FALSE) +
+
+  # Use theme_minimal 
+  theme_minimal(base_family = my_font) +
+
+  # Manual color scale 
+  scale_fill_manual(values = hcl.colors(n = length(day_order), palette = "Dynamic")) +
+
+  # Apply the polar transformation 
+  coord_polar() +
+
+  # Adjust titles and labels 
+  labs(
+    title = "Frequency of traffic accidents in BCN by day of the week",
+    subtitle = "Distribution of incidents throughout the week",
+    caption = "Data Source: Barcelona City Council (Traffic Accidents)"
+  ) +
+
+  # Aesthetics customization
+  theme(
+    legend.position = "none",
+    text = element_text(family = my_font, size = 14),
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank(), 
+    axis.text.y = element_blank(), 
+    axis.ticks = element_blank(),
+    plot.margin = unit(rep(0.7, 4), "cm"),
+    plot.title = element_text(color = "black", family = my_font, size = 20, face = "bold"),
+    plot.caption = element_text(color = "grey50", family = my_font, size = 11),
+    plot.subtitle = element_text(color = "grey50", size = 13),
+    # Adjust the color of the X-axis labels (day names)
+    axis.text.x = element_text(size = 12, color = "black", face = "bold")
+  )
+```
+
+
+
+
