@@ -77,6 +77,16 @@ meteo_23_24 <- read.csv("meteo_23_24.csv")
 # I have to convert the date column to a date-time format
 meteo_23_24$fecha <- ymd(meteo_23_24$fecha)
 
+# Define Category Labels 
+# Temperature Labels (4 Categories)
+tmed_labels <- c("Cold", "Cool", "Mild", "Hot")
+
+# Precipitation Labels (4 Categories)
+prec_labels <- c("No Rain", "Light", "Moderate", "Heavy ")
+
+# Wind Direction Labels (9 Categories - including 'Calm/No Data')
+dir_labels <- c("Calm/No Data", "N", "NE", "E", "SE", "S", "SO", "O", "NO")
+
 # Data preparation for both years
 meteo_23_24 <- meteo_23_24 %>%
   mutate(
@@ -263,16 +273,6 @@ par(mfrow = c(3, 2), mar = c(1, 1, 1, 1))
 # Common axis labels based on global maximum for temperature
 common_max_tmed <- max(max(tmed_freq_2023), max(tmed_freq_2024))
 
-# Define Category Labels 
-# Temperature Labels (4 Categories)
-tmed_labels <- c("Cold", "Cool", "Mild", "Hot")
-
-# Precipitation Labels (4 Categories)
-prec_labels <- c("No Rain", "Light", "Moderate", "Heavy ")
-
-# Wind Direction Labels (9 Categories - including 'Calm/No Data')
-dir_labels <- c("Calm/No Data", "N", "NE", "E", "SE", "S", "SO", "O", "NO")
-
 # Radar chart for temperature (2023)
 
 radarchart(
@@ -438,7 +438,7 @@ freq_data %>%
   geom_col(color = "grey20", show.legend = FALSE) +
 
   # Use theme_minimal 
-  theme_minimal(base_family = my_font) +
+  theme_minimal() +
 
   # Manual color scale 
   scale_fill_manual(values = hcl.colors(n = length(day_order), palette = "Dynamic")) +
@@ -456,14 +456,14 @@ freq_data %>%
   # Aesthetics customization
   theme(
     legend.position = "none",
-    text = element_text(family = my_font, size = 14),
+    text = element_text(size = 14),
     axis.title.y = element_blank(),
     axis.title.x = element_blank(), 
     axis.text.y = element_blank(), 
     axis.ticks = element_blank(),
     plot.margin = unit(rep(0.7, 4), "cm"),
-    plot.title = element_text(color = "black", family = my_font, size = 20, face = "bold"),
-    plot.caption = element_text(color = "grey50", family = my_font, size = 11),
+    plot.title = element_text(color = "black", size = 20, face = "bold"),
+    plot.caption = element_text(color = "grey50", size = 11),
     plot.subtitle = element_text(color = "grey50", size = 13),
     # Adjust the color of the X-axis labels (day names)
     axis.text.x = element_text(size = 12, color = "black", face = "bold")
