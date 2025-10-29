@@ -72,7 +72,6 @@ library(tidyverse)
 library(fmsb)
 
 # Data import
-# meteo_23_24 <- read_csv("Màster en Data Science/3r semestre/Visualització de dades/PAC 2/meteo_23_24.csv")
 meteo_23_24 <- read.csv("meteo_23_24.csv")
 # I have to convert the date column to a date-time format
 meteo_23_24$fecha <- ymd(meteo_23_24$fecha)
