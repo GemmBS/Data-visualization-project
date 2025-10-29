@@ -13,7 +13,7 @@ output:
   pdf_document: default
 ---
 
-# 1. AREA CHART:
+# 1. Area chart
 
 Based on meteorological data from Barcelona for the year 2024, we create a dynamic area chart with the "date" variable on the X-axis and the "daily average temperature" variable on the Y-axis. data available on: https://opendata.aemet.es/centrodedescargas/productosAEMET
 
@@ -448,7 +448,7 @@ freq_data %>%
 
   # Adjust titles and labels 
   labs(
-    title = "Frequency of traffic accidents in BCN by day of the week",
+    title = "Frequency of traffic accidents in BCN\nby day of the week",
     subtitle = "Distribution of incidents throughout the week",
     caption = "Data Source: Barcelona City Council (Traffic Accidents)"
   ) +
