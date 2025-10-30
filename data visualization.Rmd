@@ -11,11 +11,22 @@ output:
     toc_depth: 5   
   word_document: default
   pdf_document: default
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 # 1. Area chart
 
-Based on meteorological data from Barcelona for the year 2024, we create a dynamic area chart with the "date" variable on the X-axis and the "daily average temperature" variable on the Y-axis. data available on: https://opendata.aemet.es/centrodedescargas/productosAEMET
+Based on meteorological data from Barcelona for the year 2024, we create
+a dynamic area chart with the "date" variable on the X-axis and the
+"daily average temperature" variable on the Y-axis.
+
+-   Data available on:
+    <https://opendata.aemet.es/centrodedescargas/productosAEMET>
+
+-   Code inspired by:
+    <https://r-graph-gallery.com/318-custom-dygraphs-time-series-example.html>
 
 ```{r dygraph, message=FALSE, warning=FALSE}
 # Library
@@ -37,10 +48,10 @@ meteo_2024$fecha <- ymd(meteo_2024$fecha)
 # Then you can create the xts necessary to use dygraph
 don <- xts(x = meteo_2024$tmed, order.by = meteo_2024$fecha)
 # Finally the plot
-p <- dygraph(don) %>%
+p <- dygraph(don, main = "Monthly evolution of the average temperature in Barcelona during 2024") %>%
   dySeries(
     name = "V1", 
-    label = "Temperatura", 
+    label = "Temperature", 
     color = "#D8AE5A"
   ) %>%
   dyOptions(
@@ -61,10 +72,17 @@ p <- dygraph(don) %>%
 p
 ```
 
+# 2. Radar chart
 
-# 2. Radar Chart
+Using a combined dataset with similar variables from 2023 and 2024, we
+took the numerical variables of daily average rainfall, daily average
+temperature, and wind direction. These variables were categorized to
+create individual radar charts for each.
 
-Using a combined dataset with similar variables from 2023 and 2024, we took the numerical variables of daily average rainfall, daily average temperature, and wind direction. These variables were categorized to create individual radar charts for each.
+-   Data available on:
+    <https://opendata.aemet.es/centrodedescargas/productosAEMET>
+
+-   Code inspired by: <https://www.data-to-viz.com/caveat/spider.html>
 
 ```{r radar_charts, fig.width=10, fig.height=15, warning=FALSE, message=FALSE}
 # Libraries
@@ -268,7 +286,7 @@ dir_final_2024 <- rbind(
 )
 
 # Set up the plotting area to have 3 rows and 2 columns
-par(mfrow = c(3, 2), mar = c(1, 1, 1, 1))
+par(mfrow = c(3, 2), mar = c(1, 1, 1, 1), oma = c(3, 3, 6, 3))
 
 # Common axis labels based on global maximum for temperature
 common_max_tmed <- max(max(tmed_freq_2023), max(tmed_freq_2024))
@@ -381,11 +399,27 @@ radarchart(
   vlcex = 0.8                      # Size of variable labels
 )
 title(main = "Wind Direction (2024)")  # Title for wind direction chart (2024)
+
+# Title for all radar charts (global title)
+mtext(
+  "Comparison of daily weather patterns between 2023 and 2024 in the city of Barcelona",
+  outer = TRUE,     # Title outside the plot area
+  cex = 1.3,        # Title size
+  line = 1,        # Adjust vertical position
+  font = 2          # Bold
+)
 ```
 
-# 3. Rose Chart
+# 3. Rose chart
 
-Using the BCN traffic accident data for 2024, we aim to create a rose chart to visualize how accidents are distributed throughout the days of the week. Data available on: https://opendata-ajuntament.barcelona.cat/data/ca/dataset/accidents-gu-bcn
+Using the BCN traffic accident data for 2024, we aim to create a rose
+chart to visualize how accidents are distributed throughout the days of
+the week.
+
+-   Data available on:
+    <https://opendata-ajuntament.barcelona.cat/data/ca/dataset/accidents-gu-bcn>
+
+-   Code inspired by: <https://rpubs.com/chidungkt/819554>
 
 ```{r warning=FALSE, message=FALSE}
 # Libraries
@@ -450,7 +484,7 @@ freq_data %>%
   labs(
     title = "Frequency of traffic accidents in BCN\nby day of the week",
     subtitle = "Distribution of incidents throughout the week",
-    caption = "Data Source: Barcelona City Council (Traffic Accidents)"
+    caption = "Data source: Barcelona city council (Traffic accidents)"
   ) +
 
   # Aesthetics customization
@@ -462,14 +496,10 @@ freq_data %>%
     axis.text.y = element_blank(), 
     axis.ticks = element_blank(),
     plot.margin = unit(rep(0.7, 4), "cm"),
-    plot.title = element_text(color = "black", size = 20, face = "bold"),
+    plot.title = element_text(color = "black", size = 20, face = "bold", hjust = 0.5),
     plot.caption = element_text(color = "grey50", size = 11),
     plot.subtitle = element_text(color = "grey50", size = 13),
     # Adjust the color of the X-axis labels (day names)
     axis.text.x = element_text(size = 12, color = "black", face = "bold")
   )
 ```
-
-
-
-
