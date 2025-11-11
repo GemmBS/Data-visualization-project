@@ -3,7 +3,20 @@ This repository contains the code and datasets used for PAC2 of the visualitzaci
 The goal is to show a sample of three assigned visualisation types using open data and the R language.
 
 # 1. Repository structure
-
+```text
+.
+├── data-visualization_files/    # Automatically generated folder by R Markdown/knitr
+│   └── figure-latex             # Contains figures and auxiliary output elements
+├── 2024_accidents_gu_bcn.csv      # Barcelona city guard accidents data (input data)
+├── Data-visualization-project.Rproj # RStudio project file
+├── LICENSE                      # License file 
+├── README.md                    # Main project documentation (This file)
+├── data visualization.Rmd       # R Markdown file containing code for analysis and visualization
+├── data-visualization.html      # Final report in HTML format generated from the Rmd
+├── index.html                   # Landing page presentation file
+├── meteo_2024.csv               # Meteorological data for 2024 (input data).
+└── meteo_23_24.csv              # Consolidated meteorological data 2023-2024 (input data).
+```
 # 2. Dependencies
 R packages: 
 
@@ -15,11 +28,11 @@ R packages:
 
 - Lubridate
 
-- fmsb
+- Fmsb
 
-- stringr
+- Stringr
 
-- showtext
+- Showtext
 
 # 4. Data sources
 - **Area chart**- Monthly evolution of the average temperature in Barcelona during 2024: https://opendata.aemet.es/centrodedescargas/productosAEMET
@@ -27,5 +40,7 @@ R packages:
 - **Rose chart**- Frequency of traffic accidents in BCN by day of the week: https://opendata-ajuntament.barcelona.cat/data/ca/dataset/accidents-gu-bcn
 # 5. License
 GPL-3.0 License
-# 6. Author
+# 6. Visualizations web page
+https://gemmbs.github.io/Data-visualization-project/
+# 7. Author
 **Gemma Bargalló Solé**
