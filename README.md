@@ -26,6 +26,6 @@ R packages:
 - **Radar chart**- Comparison of daily weather patterns between 2023 and 2024 in the city of Barcelona: https://opendata.aemet.es/centrodedescargas/productosAEMET
 - **Rose chart**- Frequency of traffic accidents in BCN by day of the week: https://opendata-ajuntament.barcelona.cat/data/ca/dataset/accidents-gu-bcn
 # 5. License
-
+GPL-3.0 License
 # 6. Author
 **Gemma Bargalló Solé**
