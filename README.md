@@ -34,13 +34,13 @@ R packages:
 
 - Showtext
 
-# 4. Data sources
+# 3. Data sources
 - **Area chart**- Monthly evolution of the average temperature in Barcelona during 2024: https://opendata.aemet.es/centrodedescargas/productosAEMET
 - **Radar chart**- Comparison of daily weather patterns between 2023 and 2024 in the city of Barcelona: https://opendata.aemet.es/centrodedescargas/productosAEMET
 - **Rose chart**- Frequency of traffic accidents in BCN by day of the week: https://opendata-ajuntament.barcelona.cat/data/ca/dataset/accidents-gu-bcn
-# 5. License
+# 4. License
 GPL-3.0 License
-# 6. Visualizations web page
+# 5. Visualizations web page
 https://gemmbs.github.io/Data-visualization-project/
-# 7. Author
+# 6. Author
 **Gemma Bargalló Solé**
